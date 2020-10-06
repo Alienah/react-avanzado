@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Category } from '../Category';
 import { List, Item } from './styles';
-import { categories } from '../../../api/db.json';
 
-export const ListOfCategories = () => (
-  <List>
-    {
+export const ListOfCategories = () => {
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    fetch('https://wowgram-api.vercel.app/categories')
+      .then((response) => response.json())
+      .then((categoriesData) => setCategories(categoriesData));
+  }, []);
+
+  return (
+    <List>
+      {
       categories.map((category) => {
         const {
           cover, emoji, name, path,
@@ -22,5 +30,6 @@ export const ListOfCategories = () => (
         );
       })
     }
-  </List>
-);
+    </List>
+  );
+};
