@@ -1,0 +1,11 @@
+{
+    "extends": ["airbnb", "airbnb/hooks"],
+    "env": {
+        "browser": true,
+        "node": true
+    },
+    "rules": {
+        "no-underscore-dangle": "off",
+        "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }]
+    }
+}

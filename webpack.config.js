@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+
 module.exports = {
   // En el objeto le decimos que el output va a estar en un archivo app.bundle.js
   output: {
@@ -7,10 +8,10 @@ module.exports = {
   // Además le podemos decir qué plugins queremos que utilice
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'src/index.html'
+      template: 'src/index.html',
     }),
   ],
-  //Le añadimos una nueva configuración
+  //  Le añadimos una nueva configuración
   module: {
     // Le vamos a especificar las reglas que queremos que tengan nuestros módulos
     rules: [
@@ -19,17 +20,16 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          //le decimos que en esos casos use este loader
+          //  le decimos que en esos casos use este loader
           loader: 'babel-loader',
           options: {
             // Con la opción de este preset
             presets: [
-              '@babel/preset-env','@babel/preset-react'
+              '@babel/preset-env', '@babel/preset-react',
             ],
           },
         },
-      }
-  
-    ]
-  }
-}
+      },
+    ],
+  },
+};
