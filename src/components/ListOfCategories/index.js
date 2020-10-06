@@ -2,15 +2,26 @@ import React, { useState, useEffect, Fragment } from 'react';
 import { Category } from '../Category';
 import { List, Item } from './styles';
 
-export const ListOfCategories = () => {
+function useCategoriesData() {
   const [categories, setCategories] = useState([]);
-  const [showFixed, setShowFixed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     fetch('https://wowgram-api.vercel.app/categories')
       .then((response) => response.json())
-      .then((categoriesData) => setCategories(categoriesData));
+      .then((categoriesData) => {
+        setCategories(categoriesData);
+        setLoading(false);
+      });
   }, []);
+
+  return { categories, loading };
+}
+
+export const ListOfCategories = () => {
+  const { categories, loading } = useCategoriesData();
+  const [showFixed, setShowFixed] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
@@ -27,23 +38,28 @@ export const ListOfCategories = () => {
   }, [showFixed]);
 
   const renderList = (fixed) => (
-    <List className={fixed ? 'fixed' : ''}>
+    // Como estamos usando styled-components
+    // en vez de className={fixed ? 'fixed' : ''}
+    // usamos props
+    <List fixed={fixed}>
       {
-      categories.map((category) => {
-        const {
-          cover, emoji, name, path,
-        } = category;
-        return (
-          <Item key={category.id}>
-            <Category
-              cover={cover}
-              emoji={emoji}
-              name={name}
-              path={path}
-            />
-          </Item>
-        );
-      })
+        loading
+          ? <Item key="loading"><Category /></Item>
+          : categories.map((category) => {
+            const {
+              cover, emoji, name, path,
+            } = category;
+            return (
+              <Item key={category.id}>
+                <Category
+                  cover={cover}
+                  emoji={emoji}
+                  name={name}
+                  path={path}
+                />
+              </Item>
+            );
+          })
     }
     </List>
   );
