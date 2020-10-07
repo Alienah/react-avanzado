@@ -23,12 +23,12 @@ module.exports = {
           //  le decimos que en esos casos use este loader
           loader: 'babel-loader',
           options: {
+            plugins: [
+              ['@babel/plugin-transform-runtime', { regenerator: true }, '@babel/plugin-syntax-dynamic-import'],
+            ],
             // Con la opción de este preset
             presets: [
               '@babel/preset-env', '@babel/preset-react',
-            ],
-            plugins: [
-              ['@babel/plugin-transform-runtime', { regenerator: true }],
             ],
           },
         },
