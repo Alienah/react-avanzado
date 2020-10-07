@@ -604,3 +604,82 @@ export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
 };
 
 ```
+
+### Solución secundaria (independiente del curso)
+
+Podemos conseguir lo mismo usando el hook useMutation de react apollo
+
+Creamos un custom hook
+
+```js
+// src/hooks/useToggleLikeMutation.js
+
+import { gql } from 'apollo-boost';
+import { useMutation } from 'react-apollo';
+
+const LIKE_PHOTO = gql`
+  mutation likeAnonymousPhoto($input: LikePhoto!){
+    likeAnonymousPhoto(input: $input) {
+      id,
+      liked,
+      likes
+    }
+  }
+`;
+
+export const useToggleLikeMutation = (id) => {
+  const [toggleLike] = useMutation(LIKE_PHOTO, { variables: { input: { id } } });
+  return { toggleLike };
+};
+```
+
+Y PhotoCard quedaría así:
+
+```js
+// src/components/PhotoCard/index.js
+
+import React from 'react';
+import { useNearScreen } from '../../hooks/useNearScreen';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useToggleLikeMutation } from '../../hooks/useToggleLikeMutation';
+import { FavButton } from '../FavButton';
+import {
+  Article, ImgWrapper, Img,
+} from './styles';
+
+const DEFAULT_IMAGE = 'https://res.cloudinary.com/midudev/image/upload/w_150/v1555671700/category_dogs.jpg';
+
+export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
+  const [show, element] = useNearScreen();
+  const key = `like-${id}`;
+  const [liked, setLiked] = useLocalStorage(key, false);
+  const { toggleLike } = useToggleLikeMutation(id);
+
+  const handleFavClick = () => {
+    if (!liked) toggleLike();
+    setLiked(!liked);
+  };
+
+  return (
+    <Article ref={element}>
+      {
+        // Si está en el viewPort se renderiza
+        show
+        && (
+        <>
+          <a href={`/?detail=${id}`}>
+            <ImgWrapper>
+              <Img src={src} alt="" />
+            </ImgWrapper>
+          </a>
+          <FavButton liked={liked} likes={likes} onClick={handleFavClick} />
+
+        </>
+        )
+
+      }
+    </Article>
+  );
+};
+
+```
