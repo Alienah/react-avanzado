@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNearScreen } from '../../hooks/useNearScreen';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { ToggleLikeMutation } from '../../containers/ToggleLikeMutation';
 import { FavButton } from '../FavButton';
 import {
   Article, ImgWrapper, Img,
@@ -12,8 +13,6 @@ export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
   const [show, element] = useNearScreen();
   const key = `like-${id}`;
   const [liked, setLiked] = useLocalStorage(key, false);
-
-  const handleFavClick = () => setLiked(!liked);
 
   return (
     <Article ref={element}>
@@ -27,7 +26,21 @@ export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
               <Img src={src} alt="" />
             </ImgWrapper>
           </a>
-          <FavButton liked={liked} likes={likes} onClick={handleFavClick} />
+          <ToggleLikeMutation>
+            {
+              // usamos el favButton como children en la render Prop
+              // Usamos renderProp porque queremos inyectar cosas
+              // como parámetro a esta función le va a llegar la mutación que queremos realizar
+              (toggleLike) => {
+                const handleFavClick = () => {
+                  if (!liked) toggleLike({ variables: { input: { id } } });
+                  setLiked(!liked);
+                };
+                return <FavButton liked={liked} likes={likes} onClick={handleFavClick} />;
+              }
+            }
+          </ToggleLikeMutation>
+
         </>
         )
 

@@ -480,3 +480,127 @@ export const PhotoCardWithQuery = ({ id }) => (
 ```
 
 # Enviando datos a la base de datos
+
+Vamos a hacer que se almacene en la base de datos el like cuando hacemos click (de momento para un usuario anónimo)
+
+Creamos un container encargado de hacer mutaciones (que es lo que hace que se muten los valores almacenados enla base de datos)
+
+Extraemos el botón de va a un componente aparte
+
+```js
+// src/components/FavButton/index.js
+
+import React from 'react';
+import { MdFavoriteBorder, MdFavorite } from 'react-icons/md';
+import { Button } from './styles';
+
+export const FavButton = ({ liked, likes, onClick }) => {
+  const Icon = liked ? MdFavorite : MdFavoriteBorder;
+  return (
+    <Button onClick={onClick} type="button">
+      <Icon size="32px" />{likes} likes!
+    </Button>
+  );
+};
+```
+
+```js
+// src/components/FavButton/styles.js
+
+import styled from 'styled-components';
+
+export const Button = styled.button`
+  display: flex;
+  align-items: center;
+  padding-top: 8px;
+  & svg {
+    margin-right: 4px;
+  }
+`;
+```
+
+Creamos nuestro container mutador
+
+```js
+// src/containers/ToggleLikeMutation.js
+
+import React from 'react';
+import { gql } from 'apollo-boost';
+import { Mutation } from 'react-apollo';
+
+const LIKE_PHOTO = gql`
+  mutation likeAnonymousPhoto($input: LikePhoto!){
+    likeAnonymousPhoto(input: $input) {
+      id,
+      liked,
+      likes
+    }
+  }
+`;
+
+// Usamos children porque nos va a permitir usar esta mutación en cualquier componente
+export const ToggleLikeMutation = ({ children }) => (
+  <Mutation mutation={LIKE_PHOTO}>
+    {children}
+  </Mutation>
+);
+```
+
+Y en PhotoCard importamos esa mutación y el favButton y usamos esa mutación para wrappear nuestro FavButton a través de render Props, para poder inyectar dicha mutación y que al hacer click se modifique la base de datos.
+
+```js
+// src/components/PhotoCard/index.js
+
+import React from 'react';
+import { useMutation } from 'react-apollo';
+import { useNearScreen } from '../../hooks/useNearScreen';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { ToggleLikeMutation } from '../../containers/ToggleLikeMutation';
+import { FavButton } from '../FavButton';
+import {
+  Article, ImgWrapper, Img,
+} from './styles';
+
+const DEFAULT_IMAGE = 'https://res.cloudinary.com/midudev/image/upload/w_150/v1555671700/category_dogs.jpg';
+
+export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
+  const [show, element] = useNearScreen();
+  const key = `like-${id}`;
+  const [liked, setLiked] = useLocalStorage(key, false);
+
+  return (
+    <Article ref={element}>
+      {
+        // Si está en el viewPort se renderiza
+        show
+        && (
+        <>
+          <a href={`/?detail=${id}`}>
+            <ImgWrapper>
+              <Img src={src} alt="" />
+            </ImgWrapper>
+          </a>
+          <ToggleLikeMutation>
+            {
+              // usamos el favButton como children en la render Prop
+              // Usamos renderProp porque queremos inyectar cosas
+              // como parámetro a esta función le va a llegar la mutación que queremos realizar
+              (toggleLike) => {
+                const handleFavClick = () => {
+                  if (!liked) toggleLike({ variables: { input: { id } } });
+                  setLiked(!liked);
+                };
+                return <FavButton liked={liked} likes={likes} onClick={handleFavClick} />;
+              }
+            }
+          </ToggleLikeMutation>
+
+        </>
+        )
+
+      }
+    </Article>
+  );
+};
+
+```
