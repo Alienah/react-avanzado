@@ -128,3 +128,166 @@ const ListOfPhotoCardsComponent = ({ data: { photos = [] } }) => (
 export const ListOfPhotoCards = withPhotos(ListOfPhotoCardsComponent);
 
 ```
+
+## Filtrando resultados
+
+Siguiendo el ejemplo anterios, ahora ya recibimos todas las fotos en nuestro componente ListOfPhotoCards, sin embargo, queremos filtrar por si son perros, gatos, etc. Esto en la base de datos de nuestra aplicación tiene en su estructura un categoryId, que es el que nos ayudará a filtrar. 
+
+¿Cómo lo hacemos en la query?
+
+```js
+// src/components/ListOfPhotoCards/index.js
+
+// ...
+// Añadimos a la query el parámetro categoryId, para que nos filtre por categoría
+const withPhotos = graphql(gql`
+  query getPhotos($categoryId: ID) {
+    photos(categoryId: $categoryId) {
+      id
+      categoryId
+      src
+      likes
+      liked
+      userId
+    }
+  }
+`);
+
+// ...
+
+export const ListOfPhotoCards = withPhotos(ListOfPhotoCardsComponent);
+
+```
+
+Con lo que ahora al componente le podemos especificar un valor concretor para la prop "categoryId" (Recordemos que nuestra función withPhotos recibe un componente como parámetro y devuelve otro componente con unas props, que son los datos de la base de datos, y entre los que está categoryId)
+
+Por ejemplo lo haríamos así en el sitio donde se instancia el componente ListOfPhotoCards, la App:
+
+```js
+// src/App.js
+
+// ...
+const App = () => (
+  <div>
+    <GlobalStyle />
+    <Logo />
+    <ListOfCategories />
+    <ListOfPhotoCards categoryId={2} />
+  </div>
+);
+
+export default App;
+
+```
+
+## HOC (High Order Components)
+
+Ahora que tenemos una función de orden superior, lo correcto sería extraerla en una carpeta, ya que queremos seprar la lógica de la vista
+
+Creamos una carpeta hoc, en la que vamos a crear poner nuestro primer hoc:
+
+```js
+// src/hoc/withPhotos.js
+
+import { graphql } from 'react-apollo';
+import { gql } from 'apollo-boost';
+
+// Añadimos a la query el parámetro categoryId, para que nos filtre por categoría
+export const withPhotos = graphql(gql`
+  query getPhotos($categoryId: ID) {
+    photos(categoryId: $categoryId) {
+      id
+      categoryId
+      src
+      likes
+      liked
+      userId
+    }
+  }
+`);
+
+// Con esta función "withPhotos" vamos a envolver nuestro componente y generar uno nuevo
+// Por eso es de orden superior, porque:
+// usaremos como parámetro una función(en este caso componente)
+// y además nos devuelve otro componente (que es una función) con mejoras
+
+```
+
+Y el componente que lo usa, quedaría así:
+
+```js
+// src/components/ListOfPhotoCards/index.js
+
+import React from 'react';
+import { withPhotos } from '../../hoc/withPhotos';
+import { PhotoCard } from '../PhotoCard';
+
+const ListOfPhotoCardsComponent = ({ data: { photos = [] } }) => (
+  <ul>
+    {photos.map((photo) => (
+      <li key={photo.id}>
+        <PhotoCard {...photo} />
+      </li>
+    ))}
+  </ul>
+);
+
+export const ListOfPhotoCards = withPhotos(ListOfPhotoCardsComponent);
+```
+
+## Separando container y components
+
+También podríamos ir separando la lógica de negocio o container de lo presentacional
+
+De modo que el componente quedaría así:
+
+```js
+// src/components/ListOfPhotoCards/index.js
+
+import React from 'react';
+import { PhotoCard } from '../PhotoCard';
+
+export const ListOfPhotoCardsComponent = ({ data: { photos = [] } }) => (
+  <ul>
+    {photos.map((photo) => (
+      <li key={photo.id}>
+        <PhotoCard {...photo} />
+      </li>
+    ))}
+  </ul>
+);
+```
+
+Y el container así:
+
+```js
+// src/containers/ListOfPhotoCards.js
+
+import { withPhotos } from '../hoc/withPhotos';
+import { ListOfPhotoCardsComponent } from '../components/ListOfPhotoCards';
+
+export const ListOfPhotoCards = withPhotos(ListOfPhotoCardsComponent);
+
+```
+
+Y este container es el que se importaría en App
+
+```js
+// src/App.js
+
+// ...
+import { ListOfPhotoCards } from './containers/ListOfPhotoCards';
+// ...
+
+const App = () => (
+  <div>
+   {
+    //  ...
+   }
+    <ListOfPhotoCards categoryId={2} />
+  </div>
+);
+
+export default App;
+
+```
