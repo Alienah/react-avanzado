@@ -180,7 +180,7 @@ export default App;
 
 ```
 
-## HOC (High Order Components)
+## HOC (High Order Components) - Patrón
 
 Ahora que tenemos una función de orden superior, lo correcto sería extraerla en una carpeta, ya que queremos seprar la lógica de la vista
 
@@ -291,3 +291,147 @@ const App = () => (
 export default App;
 
 ```
+
+## Render Props - Patrón
+
+Este patrón lo que hace es convertir la prop especial _children_ y, en lugar de renderizar un elemento (como haríamos normalmente), lo que va a renderizar es una función.
+
+Esta función por tanto lo que devuelve es el componente que queremos renderizar.
+
+La utilidad de las render props, en la función Children, es que podemos especificar, a través de los parámetros que recibe esta función,  qué información de graphql queremos inyectar en ese componente que vamos a renderizar.
+
+Vamos a ver un ejemplo.
+
+En nuestro proyecto, vamos a cambiar el componente PhotoCard y vamos a hacer que el enlace en vez de ser ```/detail/${id}``` sea una query string (con ? e =):
+
+```js
+// src/components/PhotoCard/index.js
+
+// ...
+<a href={`/?detail=${id}`}>
+  <ImgWrapper>
+    <Img src={src} alt="" />
+  </ImgWrapper>
+</a>
+// ...
+```
+
+Esto nos va a servir para identificar si estamos navegando a un detalle.
+
+¿Cómo podemos detectar eso?
+
+Nos vamos a App y accedemos a la url para obtener ese detail
+
+```js
+// App.js
+
+import React from 'react';
+import { GlobalStyle } from './styles/GlobalStyles';
+import { ListOfCategories } from './components/ListOfCategories';
+import { ListOfPhotoCards } from './containers/ListOfPhotoCards';
+import { Logo } from './components/Logo';
+
+const App = () => {
+  // URLSearchParams recibe un parámetro, que va a ser la query string
+  const urlParams = new window.URLSearchParams(window.location.search);
+  const detailId = urlParams.get('detail');
+  console.log(urlParams, detailId);
+  return (
+    <div>
+      <GlobalStyle />
+      <Logo />
+      {
+        // Si hay un detailId, se renderiza otro contenido con el detailId,
+        // en caso contrario, se ven las listas completas
+        detailId
+          ? <h1>Detail id {detailId}</h1>
+          : (
+            <>
+              <ListOfCategories />
+              <ListOfPhotoCards categoryId={2} />
+            </>
+          )
+      }
+    </div>
+  );
+};
+
+export default App;
+```
+
+Ahora vamos a ir un poco más allá, porque lo que queremos es que al hacer click en ese enlace, se muestre la query que queremos, para ello vamos a crear un nuevo container PhotoCardWithQuery, que es donde vamos a usar el método de render props.
+
+```js
+// src/container/PhotoCardWithQuery.js
+
+import React from 'react';
+import { gql } from 'apollo-boost';
+// Query es lo que nos va a permitir usar la técnica de render props
+import { Query } from 'react-apollo';
+import { PhotoCard } from '../components/PhotoCard';
+
+const query = gql`
+  query getSinglePhoto($id:ID!) {
+    photo(id:$id) {
+      id
+      categoryId
+      src
+      likes
+      liked
+      userId
+    }
+  }
+`;
+
+export const PhotoCardWithQuery = ({ id }) => (
+  <Query query={query} variables={{ id }}>
+    {
+      // Recordemos que con las render props no renderizamos un componente directamente,
+      // sino una función que devuelve un componente
+      ({ loading, error, data }) => {
+        if (loading) return null;
+        const { photo } = data;
+        return <PhotoCard {...photo} />;
+      }
+
+    }
+  </Query>
+);
+
+```
+
+Y en la App, lo importamos pasándole por props la id del detail que queremos buscar
+
+```js
+// App.js
+
+// ...
+import { PhotoCardWithQuery } from './containers/PhotoCardWithQuery';
+// ...
+
+const App = () => {
+  // URLSearchParams recibe un parámetro, que va a ser la query string
+  const urlParams = new window.URLSearchParams(window.location.search);
+  const detailId = urlParams.get('detail');
+
+  return (
+    <div>
+      {
+        // ...
+        detailId
+          ? <PhotoCardWithQuery id={detailId} />
+          : (
+            <>
+              <ListOfCategories />
+              <ListOfPhotoCards categoryId={2} />
+            </>
+          )
+      }
+    </div>
+  );
+};
+
+export default App;
+```
+
+_Como ejercicio, podríamos convertir el HOC que hicimos antes con esta técnica_

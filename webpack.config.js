@@ -33,6 +33,12 @@ module.exports = {
           },
         },
       },
+      // para evitar los warning en navegador de los source-map-loader de los node modules
+      {
+        test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+      },
     ],
   },
 };
