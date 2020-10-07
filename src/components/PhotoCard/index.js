@@ -1,9 +1,9 @@
 import React from 'react';
-import { MdFavoriteBorder, MdFavorite } from 'react-icons/md';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useNearScreen } from '../../hooks/useNearScreen';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { FavButton } from '../FavButton';
 import {
-  Article, ImgWrapper, Img, Button,
+  Article, ImgWrapper, Img,
 } from './styles';
 
 const DEFAULT_IMAGE = 'https://res.cloudinary.com/midudev/image/upload/w_150/v1555671700/category_dogs.jpg';
@@ -13,7 +13,7 @@ export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
   const key = `like-${id}`;
   const [liked, setLiked] = useLocalStorage(key, false);
 
-  const Icon = liked ? MdFavorite : MdFavoriteBorder;
+  const handleFavClick = () => setLiked(!liked);
 
   return (
     <Article ref={element}>
@@ -27,9 +27,7 @@ export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
               <Img src={src} alt="" />
             </ImgWrapper>
           </a>
-          <Button onClick={() => setLiked(!liked)} type="button">
-            <Icon size="32px" />{likes} likes!
-          </Button>
+          <FavButton liked={liked} likes={likes} onClick={handleFavClick} />
         </>
         )
 

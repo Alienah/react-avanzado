@@ -478,3 +478,5 @@ export const PhotoCardWithQuery = ({ id }) => (
   </Query>
 );
 ```
+
+# Enviando datos a la base de datos
