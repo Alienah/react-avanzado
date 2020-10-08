@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from '@reach/router';
 import { useNearScreen } from '../../hooks/useNearScreen';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useToggleLikeMutation } from '../../hooks/useToggleLikeMutation';
@@ -27,11 +28,11 @@ export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
         show
         && (
         <>
-          <a href={`/?detail=${id}`}>
+          <Link to={`/detail/${id}`}>
             <ImgWrapper>
               <Img src={src} alt="" />
             </ImgWrapper>
-          </a>
+          </Link>
           <FavButton liked={liked} likes={likes} onClick={handleFavClick} />
 
         </>

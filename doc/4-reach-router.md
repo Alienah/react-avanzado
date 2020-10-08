@@ -199,3 +199,92 @@ export const Category = ({ cover = DEFAULT_IMAGE, path = '#', emoji = '?' }) => 
   </Link>
 );
 ```
+
+La ventaja de Link es que por accesibilidda, cuando navega al link especificado, se posiciona en el contenido principal de esa página automáticamente.
+
+### Ejemplo de refactor de la página de detail.
+
+Como tenemos la configuración del detalle hecha para que se esté fijando en la query string, aunque le hagamos click al logo de la página desde la ruta del detalle del animal, no navega a la home.
+
+```js
+  // URLSearchParams recibe un parámetro, que va a ser la query string
+  const urlParams = new window.URLSearchParams(window.location.search);
+  const detailId = urlParams.get('detail');
+```
+
+Vamos a cambiar eso para que detail tenga su página y esté dentro del Router
+
+Creamos la página y ahora va a recibir el id por el path, igualq ue la home
+
+```js
+// src/pages/Detail.js
+
+import React from 'react';
+import { PhotoCardWithQuery } from '../containers/PhotoCardWithQuery';
+
+export const Detail = ({ detailId }) => <PhotoCardWithQuery id={detailId} />;
+```
+
+Y en la App, eliminamos lo que había antes y establecemos el nuevo path de la página Detail, ahora ya dentro del Router
+
+```js
+// App.js
+
+import React from 'react';
+import { Router } from '@reach/router';
+import { GlobalStyle } from './styles/GlobalStyles';
+import { Home } from './pages/Home';
+import { Detail } from './pages/Detail';
+import { Logo } from './components/Logo';
+
+const App = () => (
+  <div>
+    <GlobalStyle />
+    <Logo />
+    <Router>
+      <Home path="/" />
+      <Home path="/pet/:categoryId" />
+      <Detail path="/detail/:detailId" />
+    </Router>
+
+  </div>
+);
+
+export default App;
+
+```
+
+Sin embargo, cuando hacemos click en una imagen, nos sigue apareciendo la ruta anterior que es una query string (con ```?detail=```) y ahora donde está en contenido es en ```detail/```,
+
+Así que vamos a cambiar el path en PhotoCard y además vamos a importar Link para que no recargue la página cada vez que navega a una ruta, ya que es una PWA.
+
+```js
+// src/components/PhotoCard/index.js
+
+// ...
+import { Link } from '@reach/router';
+
+// ...
+  return (
+    <Article ref={element}>
+      {
+        // Si está en el viewPort se renderiza
+        show
+        && (
+        <>
+          <Link to={`/detail/${id}`}>
+            <ImgWrapper>
+              <Img src={src} alt="" />
+            </ImgWrapper>
+          </Link>
+          <FavButton liked={liked} likes={likes} onClick={handleFavClick} />
+
+        </>
+        )
+
+      }
+    </Article>
+  );
+// ...
+
+```
