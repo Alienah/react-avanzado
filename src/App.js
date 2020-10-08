@@ -1,8 +1,10 @@
 import React from 'react';
+// Nos va a permitir cambiar de ruta
+// Está disponible en toda la aplicación y no nos tenemos que preocupar por englobar la App, etc
+import { Router } from '@reach/router';
 import { GlobalStyle } from './styles/GlobalStyles';
-import { ListOfCategories } from './components/ListOfCategories';
-import { ListOfPhotoCards } from './containers/ListOfPhotoCards';
 import { PhotoCardWithQuery } from './containers/PhotoCardWithQuery';
+import { Home } from './pages/Home';
 import { Logo } from './components/Logo';
 
 const App = () => {
@@ -18,10 +20,11 @@ const App = () => {
         detailId
           ? <PhotoCardWithQuery id={detailId} />
           : (
-            <>
-              <ListOfCategories />
-              <ListOfPhotoCards categoryId={2} />
-            </>
+            <Router>
+
+              <Home path="/" />
+              <Home path="/pet/:id" />
+            </Router>
           )
       }
     </div>

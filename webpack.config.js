@@ -4,6 +4,7 @@ module.exports = {
   // En el objeto le decimos que el output va a estar en un archivo app.bundle.js
   output: {
     filename: 'app.bundle.js',
+    publicPath: '/',
   },
   // Además le podemos decir qué plugins queremos que utilice
   plugins: [

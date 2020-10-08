@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Category } from '../Category';
 import { List, Item } from './styles';
 
@@ -47,15 +47,15 @@ export const ListOfCategories = () => {
           ? <Item key="loading"><Category /></Item>
           : categories.map((category) => {
             const {
-              cover, emoji, name, path,
+              cover, emoji, id, name, path,
             } = category;
             return (
-              <Item key={category.id}>
+              <Item key={id}>
                 <Category
                   cover={cover}
                   emoji={emoji}
                   name={name}
-                  path={path}
+                  path={`/pet/${id}`}
                 />
               </Item>
             );
