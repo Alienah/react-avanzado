@@ -44,7 +44,7 @@ const App = () => {
             <Router>
 
               <Home path="/" />
-              <Home path="/pet/:id" />
+              <Home path="/pet/:animalCategoryId" />
             </Router>
           )
       }
@@ -138,11 +138,64 @@ Ahora faltaría el último paso para que cuando haga click en una categoría se 
 ```js
 // Home.js
 // ...
-export const Home = ({ id }) => (
+export const Home = ({ animalCategoryId }) => (
   <>
     <ListOfCategories />
-    <ListOfPhotoCards categoryId={id} />
+    <ListOfPhotoCards categoryId={animalCategoryId} />
   </>
 );
 ```
 
+## Uso de Link para evitar recargar página
+
+En lugar del anchor (que hace que navegue realmente a una página), vamos a usar el Link de Reach Router
+
+En el ejemplo de Category, vamos a cambiar uno por otro así:
+
+```js
+// src/components/Category/styles.js
+
+import styled from 'styled-components';
+// Usamos Link de reach Router
+import { Link as LinkRouter } from '@reach/router';
+
+// Lo usamos en styles, porque recordemos que con styled-component la etiqueta de html que estilamos se declara aquí
+// Antes export const Anchor = styled.a`
+export const Link = styled(LinkRouter)`
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  text-decoration: none;
+  width: 75px;
+`;
+
+export const Image = styled.img`
+  border: 1px solid #ddd;
+  box-shadow: 0px 10px 14px rgba(0, 0, 0, .2);
+  border-radius: 50%;
+  height: auto;
+  overflow: hidden;
+  object-fit: cover;
+  height: 75px;
+  width: 75px;
+`;
+```
+
+Y en el index cambiaríamos el parámetro que recibe, porque ya no estamos usando un anchor, sino un componente Link, que en vez de ```href``` usa ```to```
+
+```js
+// src/components/Category/index.js
+
+// ...
+import { Link, Image } from './styles';
+
+// ...
+
+// También hemos cambiado el path para que tenga un anchor por defecto, ya que de otro modo, da error
+export const Category = ({ cover = DEFAULT_IMAGE, path = '#', emoji = '?' }) => (
+  <Link to={path}>
+    <Image src={cover} alt="imagen" />
+    {emoji}
+  </Link>
+);
+```

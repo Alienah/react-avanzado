@@ -23,7 +23,7 @@ const App = () => {
             <Router>
 
               <Home path="/" />
-              <Home path="/pet/:id" />
+              <Home path="/pet/:categoryId" />
             </Router>
           )
       }
