@@ -288,3 +288,101 @@ import { Link } from '@reach/router';
 // ...
 
 ```
+
+## Creamos una barra de navegación con Link
+
+Vamos a crear un componente NavBar
+
+```js
+// src/components/NavBar/index.js
+
+import React from 'react';
+import { MdHome, MdFavoriteBorder, MdPersonOutline } from 'react-icons/md';
+import { Nav, Link } from './styles';
+
+const SIZE = '32px';
+
+export const NavBar = () => (
+  <Nav>
+    <Link to="/" aria-label="Go to home"><MdHome size={SIZE} /></Link>
+    <Link to="/favs" aria-label="Go to favorites"><MdFavoriteBorder size={SIZE} /></Link>
+    <Link to="/user" aria-label="Go to user page"><MdPersonOutline size={SIZE} /></Link>
+  </Nav>
+);
+```
+
+Y usamos Link junto con styled components para dar estilos a los enlaces. Además, nos aprovechamos de que Link le pone a sus acnhor un atributo llamado aria-current, para dar estilo al elemento del menú que está activo.
+
+```js
+// src/components/NavBar/styles.js
+
+import styled from 'styled-components';
+import { Link as LinkRouter } from '@reach/router';
+import { fadeIn } from '../../styles/animation';
+
+export const Link = styled(LinkRouter)`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  height: 100%;
+  width: 100%;
+  text-decoration: none;
+
+  &[aria-current] {
+    color: #000;
+
+    &:after {
+      ${fadeIn({ time: '0.5s' })};
+      content: '.';
+      position: absolute;
+      bottom: 0;
+      font-size: 34px;
+      line-height: 20px;
+    }
+  }
+`;
+
+export const Nav = styled.nav`
+  align-items: center;
+  background: #fcfcfc;
+  border-top: 1px solid #e0e0e0;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-around;
+  height: 50px;
+  max-width: 500px;
+  width: 100%;
+  z-index: 10;
+`;
+
+```
+
+Y lo colocamos en nuestra App
+
+```js
+// App.js
+
+// ...
+import { NavBar } from './components/NavBar';
+
+const App = () => (
+  <div>
+    <GlobalStyle />
+    <Logo />
+    <Router>
+      <Home path="/" />
+      <Home path="/pet/:categoryId" />
+      <Detail path="/detail/:detailId" />
+    </Router>
+    <NavBar />
+
+  </div>
+);
+
+export default App;
+```
