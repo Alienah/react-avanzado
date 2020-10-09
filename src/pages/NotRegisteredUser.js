@@ -1,5 +1,6 @@
 import React from 'react';
 import Context from '../Context';
+import { UserForm } from '../components/UserForm';
 
 export const NotRegisteredUser = () => (
   // Usamos el consumer, ya que lo que queremos es acceder a los datos
@@ -7,9 +8,7 @@ export const NotRegisteredUser = () => (
   <Context.Consumer>
     {
       ({ activateAuth }) => (
-        <form onSubmit={activateAuth}>
-          <button type="submit">Iniciar sesión</button>
-        </form>
+        <UserForm onSubmit={activateAuth} />
       )
     }
   </Context.Consumer>
