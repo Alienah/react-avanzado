@@ -8,8 +8,7 @@ import { User } from './pages/User';
 import { NotRegisteredUser } from './pages/NotRegisteredUser';
 import { Logo } from './components/Logo';
 import { NavBar } from './components/NavBar';
-
-const UserLogged = ({ children }) => children({ isAuth: false });
+import Context from './Context';
 
 const App = () => (
   <div>
@@ -20,7 +19,7 @@ const App = () => (
       <Home path="/pet/:categoryId" />
       <Detail path="/detail/:detailId" />
     </Router>
-    <UserLogged>
+    <Context.Consumer>
       {
           ({ isAuth }) => (isAuth
             ? (
@@ -37,7 +36,7 @@ const App = () => (
             ))
         }
 
-    </UserLogged>
+    </Context.Consumer>
 
     <NavBar />
 
