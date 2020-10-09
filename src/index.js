@@ -21,7 +21,7 @@ const client = new ApolloClient({
 ReactDOM.render(
   // Accedemos al componente provider y
   // en value especificamos todos los valores que queremos que tenga el árbol accesible
-  <Context.Provider value={{ isAuth: true }}>
+  <Context.Provider>
     <ApolloProvider client={client}>
       <App />
     </ApolloProvider>

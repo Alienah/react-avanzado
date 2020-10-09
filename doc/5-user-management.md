@@ -181,3 +181,81 @@ export default App;
 
 El Context.Provider del index,js está usando las mismas props que nuestro componente render props: ```({ isAuth: false })``` , con lo que no hace falta que hagamos nada más.
 
+## Modificamos Context.Provider a través de render props
+
+Para poder controlar los valores que les vamos a pasar con el contexto al resto de las aplicación, vamos a hacer unas modificaciones en ```Context.js```.  En concreto, vamos a modificar su componente ```Provider``` a través de la técnica render props.
+
+```js
+// src/Context.js
+
+import React, { createContext, useState } from 'react';
+
+const Context = createContext();
+
+// Vamos a modificar el componente Provider
+// y le añadimos un estado para saber si está autentificado o no
+// Y esto, como se puede apreciar lo hacemos con la ténica de render props
+const Provider = ({ children }) => {
+  const [isAuth, setIsAuth] = useState(false);
+
+  // Esto es lo que vamos a pasarle como prop al Provider.
+  // Con lo cual, es el que vamos a poder acceder desde toda la aplicación
+  const value = {
+    isAuth,
+    activateAuth: () => {
+      setIsAuth(true);
+    },
+  };
+
+  return (
+    <Context.Provider value={value}>
+      {children}
+    </Context.Provider>
+  );
+};
+
+// Exportamos en nuevo Provider y el Consumer por defecto
+export default {
+  Provider,
+  Consumer: Context.Consumer,
+};
+
+```
+
+Hecho esto, ya podríamos eliminar del ```Index.js``` la prop value de ```<Context.Provider value={{ isAuth: true }}>```, porque ya lo tenemos definido en el ```Context.js```.
+
+```js
+// Index.js
+
+ReactDOM.render(
+  <Context.Provider>
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>
+  </Context.Provider>, document.getElementById('app'),
+);
+```
+
+Ahora vamos a ver cómo sacarle partido a este cambio que acabamos de hacer. Vamos a cambiar la página de NotRegistered para que pueda hacer login
+
+```js
+// pages/NotRegisteredUser.js
+
+import React from 'react';
+import Context from '../Context';
+
+export const NotRegisteredUser = () => (
+  // Usamos el consumer, ya que lo que queremos es acceder a los datos
+  // El consumer lo que recibe es una render prop
+  <Context.Consumer>
+    {
+      // Accedemos a uno de los values del Context que hemos definido antes, el activateAuth
+      ({ activateAuth }) => (
+        <form onSubmit={activateAuth}>
+          <button type="submit">Iniciar sesión</button>
+        </form>
+      )
+    }
+  </Context.Consumer>
+);
+```
