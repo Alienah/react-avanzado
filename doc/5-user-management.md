@@ -259,3 +259,107 @@ export const NotRegisteredUser = () => (
   </Context.Consumer>
 );
 ```
+
+## Registro e inicio de sesión en base de datos.
+
+Vamos a usar una mutación de graphql para manejar esta información en la base de datos.
+
+Creamos el archivo ```RegisterMutation.js``` que va a contener la mutación de graphql y va a devolver un componente que usa render props.
+
+```js
+// src/containers/RegisterMutation.js
+
+import React from 'react';
+import { Mutation } from 'react-apollo';
+import { gql } from 'apollo-boost';
+
+const REGISTER = gql`
+  mutation signup($input: UserCredentials!) {
+    signup(input: $input)
+  }
+`;
+
+// Vamos a pasarle a los children esta mutación
+export const RegisterMutation = ({ children }) => (
+  <Mutation mutation={REGISTER}>
+    {children}
+  </Mutation>
+);
+
+```
+
+En ```NotRegisteredUser.js``` le decimos cuándo y con qué datos ejecutar esa mutación _register_
+
+```js
+// src/pages/Notregistereduser.js
+
+import React from 'react';
+import Context from '../Context';
+import { UserForm } from '../components/UserForm';
+import { RegisterMutation } from '../containers/RegisterMutation';
+
+export const NotRegisteredUser = () => (
+  <Context.Consumer>
+    {
+      ({ activateAuth }) => (
+        <>
+          <RegisterMutation>
+            {
+              // A través de la técnica de render props le pasamos la mutación register
+            (register) => {
+              const onSubmit = ({ email, password }) => {
+                // Estos valores de email y password se los pasamos como parámetro a onSubmit
+                const input = { email, password };
+                const variables = { input };
+                register({ variables })
+                  .then((activateAuth));
+              };
+              return <UserForm onSubmit={onSubmit} title="Registrarse" />;
+            }
+          }
+          </RegisterMutation>
+          <UserForm onSubmit={activateAuth} title="Iniciar sesión" />
+        </>
+      )
+    }
+  </Context.Consumer>
+);
+
+```
+
+El formulario quedaría así:
+
+```js
+// src/components/UserForm/index.js
+
+import React from 'react';
+import { useInputValue } from '../../hooks/useInputValue';
+import {
+  Form, Input, Button, Title,
+} from './styles';
+
+export const UserForm = ({ onSubmit, title }) => {
+  const email = useInputValue('');
+  const password = useInputValue('');
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    onSubmit({
+      email: email.value,
+      password: password.value,
+    });
+  };
+
+  return (
+    <>
+      <Title>{title}</Title>
+      <Form onSubmit={handleSubmit}>
+        <Input placeholder="Email" {...email} />
+        <Input placeholder="Password" type="password" {...password} />
+        <Button type="submit">{title}</Button>
+      </Form>
+    </>
+  );
+};
+
+```
