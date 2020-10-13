@@ -16,6 +16,28 @@ const client = new ApolloClient({
   // la url donde tenemos nuestro servidor de graphQL
   // Con este enlacepodemos acceder al playground de graphQL en el que podemos probar
   uri: 'https://petgram-api-server.vercel.app/graphQL',
+  // Tenemos que añadir una nueva propiedad request, que es una función
+  // que como parámetro va a recibir la operación que está realizando
+  // Es lo que se va a ejecutar justo antes de hacer cualquier petición al servidor
+  request: (operation) => {
+    const token = window.sessionStorage.getItem('token');
+    const authorization = token ? `Bearer ${token}` : '';
+    operation.setContext({
+      headers: {
+        authorization,
+      },
+    });
+  },
+  // Añadimos otra propiedad onError, para manejar errores
+  onError: (error) => {
+    const { networkError } = error;
+    if (networkError && networkError.result.code === 'invalid_token') {
+      // Eliminamos el token que está mal
+      window.sessionStorage.removeItem('token');
+      // Y le enviamos a la página de inicio de sesión
+      window.location.href = '/user';
+    }
+  },
 });
 
 ReactDOM.render(

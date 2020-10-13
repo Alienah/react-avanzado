@@ -363,3 +363,286 @@ export const UserForm = ({ onSubmit, title }) => {
 };
 
 ```
+
+## Registro y login usando useContext
+
+Vamos a cambiar las render props y vamos a usar en su lugar el hook ```useContext```. De modos que nuestro Context lo exportaríamos así:
+
+```js
+// src/Context.js
+
+import React, { createContext, useState } from 'react';
+
+// Exportamos el contexto así para poder usarlo con useContext en cualquier componente
+export const Context = createContext();
+
+const Provider = ({ children }) => {
+  // También hemos añadido el session storage para que persistan los datos si el usuario se ha logado con anterioridad
+  const [isAuth, setIsAuth] = useState(() => window.sessionStorage.getItem('token'));
+
+  const value = {
+    isAuth,
+    activateAuth: (token) => {
+      setIsAuth(true);
+      window.sessionStorage.setItem('token', token);
+    },
+  };
+
+  return (
+    <Context.Provider value={value}>
+      {children}
+    </Context.Provider>
+  );
+};
+
+export default {
+  Provider,
+  Consumer: Context.Consumer,
+};
+
+```
+
+Y lo usaremos así cuando queramos ese context. Este es el ejemplo del NotRegisteredUser.js
+
+```js
+// src/pages/NotRegisteredUser.js
+
+import React, { useContext } from 'react';
+import { Context } from '../Context';
+import { UserForm } from '../components/UserForm';
+import { useRegisterMutation } from '../hooks/useRegisterMutation';
+import { useLoginMutation } from '../hooks/useLoginMutation';
+
+export const NotRegisteredUser = () => {
+  const { activateAuth } = useContext(Context);
+  const [
+    register,
+    { data: registerData, loading: registerLoading, error: registerError },
+  ] = useRegisterMutation();
+  const [
+    login,
+    { data: loginData, loading: loginLoading, error: loginError },
+  ] = useLoginMutation();
+
+  const onSignup = ({ email, password }) => {
+    const input = { email, password };
+    const variables = { input };
+    register({ variables })
+      .then(({ data }) => {
+        const { signup: signupResponse } = data;
+        activateAuth(signupResponse);
+      })
+      /* eslint-disable-next-line no-console */
+      .catch((e) => console.warn('Error trying to register the user: ', e));
+  };
+
+  const onLogin = ({ email, password }) => {
+    const input = { email, password };
+    const variables = { input };
+    login({ variables })
+      .then(({ data }) => {
+        const { login: loginResponse } = data;
+        activateAuth(loginResponse);
+      })
+      /* eslint-disable-next-line no-console */
+      .catch((e) => console.warn('Error trying to login: ', e));
+  };
+
+  return (
+    <>
+      <UserForm
+        disabled={registerLoading}
+        errorMsg={registerError && 'El usuario ya existe o hay algún problema con el registro.'}
+        onSubmit={onSignup}
+        title="Registrarse"
+      />
+      <UserForm
+        disabled={loginLoading}
+        errorMsg={loginError && 'No existe el usuario o la contraseña es incorrecta.'}
+        onSubmit={onLogin}
+        title="Iniciar sesión"
+      />
+    </>
+  );
+};
+
+```
+
+## Gestionando JWT
+
+**¿Qué son los JWT?**
+
+Es un estándar abierto para crear tokens y que el envío de datos se pueda hacer de forma segura.
+
+Es decir, que por ejemplo un usuario si no tiene ese token no pueda dar like a alguna foto ni cambiar datos en la base de datos almacenada.
+
+El token consta de tres partes:
+
+De ```eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ4YjQ2ODAwLTBkM2QtMTFlYi04ZGU2LTZmM2Q5ZDQxZTY4MSIsImVtYWlsIjoicHJ1ZWJhQGVtYWlsLmNvbSIsImlhdCI6MTYwMjU4NTE0NywiZXhwIjoxNjAyNjcxNTQ3fQ.BI5ULPkj9X9czufU70KCC6sq1kgdPd3Jc2SNWekDmS8```.
+
+* Header: un objeto que define qué algoritmo y tipo tiene el token
+
+```eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.```
+
+* Payload: un objeto con la información que estamos enviando (name, etc)
+
+```eyJpZCI6ImQ4YjQ2ODAwLTBkM2QtMTFlYi04ZGU2LTZmM2Q5ZDQxZTY4MSIsImVtYWlsIjoicHJ1ZWJhQGVtYWlsLmNvbSIsImlhdCI6MTYwMjU4NTE0NywiZXhwIjoxNjAyNjcxNTQ3fQ.```
+
+* La firma
+
+```BI5ULPkj9X9czufU70KCC6sq1kgdPd3Jc2SNWekDmS8```
+
+Todo esto está totalmente encriptado
+
+**¿Cómo lo usamos?**
+
+Vamos a cambiar primero la mutación que teníamos anónima, para ya no sea anónima:
+
+```js
+// src/hooks/useToggleLikeMutation.js
+
+import { gql } from 'apollo-boost';
+import { useMutation } from 'react-apollo';
+
+// Hemos cambiado esta mutación
+const LIKE_PHOTO = gql`
+  mutation likePhoto($input: LikePhoto!){
+    likePhoto(input: $input) {
+      id,
+      liked,
+      likes
+    }
+  }
+`;
+
+export const useToggleLikeMutation = (id) => {
+  const [toggleLike] = useMutation(LIKE_PHOTO, { variables: { input: { id } } });
+  return { toggleLike };
+};
+```
+
+Ahora tenemos que modificar nuestro punto de entrada a la aplicación (Index.js) para que antes de hacer las peticiones a la base de datos de graphql, compruebe el token
+
+```js
+// src/Index.js
+
+import React from 'react';
+import ReactDOM from 'react-dom';
+// La utilidad que nos permite hacer la conexión fácilmente
+import ApolloClient from 'apollo-boost';
+import { ApolloProvider } from 'react-apollo';
+import Context from './Context';
+
+import App from './App';
+
+const client = new ApolloClient({
+  uri: 'https://petgram-api-server.vercel.app/graphQL',
+  // Tenemos que añadir una nueva propiedad request, que es una función
+  // que como parámetro va a recibir la operación que está realizando
+  // Es lo que se va a ejecutar justo antes de hacer cualquier petición al servidor
+  request: (operation) => {
+    const token = window.sessionStorage.getItem('token');
+    const authorization = token ? `Bearer ${token}` : '';
+    operation.setContext({
+      headers: {
+        authorization,
+      },
+    });
+  },
+});
+
+ReactDOM.render(
+  // Accedemos al componente provider y
+  // en value especificamos todos los valores que queremos que tenga el árbol accesible
+  <Context.Provider>
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>
+  </Context.Provider>, document.getElementById('app'),
+);
+
+```
+
+Y ahora tenemos que cambiar donde se usa para que ya no recupere la información del session storage, sino que nos va a llegar por props los likes almacenados para el usuario x (ya que esa información está en la base de datos)
+
+```js
+// src/components/Photocard/index.js
+
+import React from 'react';
+import { Link } from '@reach/router';
+import { useNearScreen } from '../../hooks/useNearScreen';
+import { useToggleLikeMutation } from '../../hooks/useToggleLikeMutation';
+import { FavButton } from '../FavButton';
+import {
+  Article, ImgWrapper, Img,
+} from './styles';
+
+const DEFAULT_IMAGE = 'https://res.cloudinary.com/midudev/image/upload/w_150/v1555671700/category_dogs.jpg';
+
+export const PhotoCard = ({
+  id, liked, likes = 0, src = DEFAULT_IMAGE,
+}) => {
+  const [show, element] = useNearScreen();
+  const { toggleLike } = useToggleLikeMutation(id);
+
+  // Hemos eliminado todo lo del session storage
+  const handleFavClick = () => {
+    toggleLike();
+  };
+
+  return (
+    <Article ref={element}>
+      {
+        show
+        && (
+        <>
+          <Link to={`/detail/${id}`}>
+            <ImgWrapper>
+              <Img src={src} alt="" />
+            </ImgWrapper>
+          </Link>
+          <FavButton liked={liked} likes={likes} onClick={handleFavClick} />
+
+        </>
+        )
+
+      }
+    </Article>
+  );
+};
+
+```
+
+**Asegurarnos de no tener problemas si el token expira**
+
+Como los token pueden expirar, vamos a manejar ese escenario y vamos a añadir una nueva propiedad al cliente de apollo
+
+```js
+// src/Index,js
+
+// ...
+const client = new ApolloClient({
+  uri: 'https://petgram-api-server.vercel.app/graphQL',
+  request: (operation) => {
+    const token = window.sessionStorage.getItem('token');
+    const authorization = token ? `Bearer ${token}` : '';
+    operation.setContext({
+      headers: {
+        authorization,
+      },
+    });
+  },
+  // Añadimos otra propiedad onError, para manejar errores
+  onError: (error) => {
+    const { networkError } = error;
+    if (networkError && networkError.result.code === 'invalid_token') {
+      // Eliminamos el token que está mal
+      window.sessionStorage.removeItem('token');
+      // Y le enviamos a la página de registro
+      window.location.href = '/user';
+    }
+  },
+});
+// ...
+```
+

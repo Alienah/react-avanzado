@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from '@reach/router';
 import { useNearScreen } from '../../hooks/useNearScreen';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { useToggleLikeMutation } from '../../hooks/useToggleLikeMutation';
 import { FavButton } from '../FavButton';
 import {
@@ -10,15 +9,14 @@ import {
 
 const DEFAULT_IMAGE = 'https://res.cloudinary.com/midudev/image/upload/w_150/v1555671700/category_dogs.jpg';
 
-export const PhotoCard = ({ id, likes = 0, src = DEFAULT_IMAGE }) => {
+export const PhotoCard = ({
+  id, liked, likes = 0, src = DEFAULT_IMAGE,
+}) => {
   const [show, element] = useNearScreen();
-  const key = `like-${id}`;
-  const [liked, setLiked] = useLocalStorage(key, false);
   const { toggleLike } = useToggleLikeMutation(id);
 
   const handleFavClick = () => {
-    if (!liked) toggleLike();
-    setLiked(!liked);
+    toggleLike();
   };
 
   return (
