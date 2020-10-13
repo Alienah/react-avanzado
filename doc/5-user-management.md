@@ -646,3 +646,135 @@ const client = new ApolloClient({
 // ...
 ```
 
+## Acceder a los datos de un usario registrado
+
+Vamos a hacerlo con el hook useQuery, para ello creamos nuestro custom hook useGetFavsQuery:
+
+```js
+// src/hooks/useGetFavsQuery.js
+
+import { gql } from 'apollo-boost';
+import { useQuery } from 'react-apollo';
+
+const GET_FAVS = gql`
+  query getFavs {
+    favs {
+      id
+      categoryId
+      src
+      likes
+      userId
+    }
+  }
+`;
+
+export const useGetFavsQuery = () => {
+  const { loading, error, data } = useQuery(GET_FAVS, {
+    // añadimos esta propiedad para que cuando le damos a un like y nos movemos a nuestra página de favs, se refresque y tome los datos tanto del servidor como de la caché, si no, se quedaría con la caché por defecto y no veríamos los cambios
+    fetchPolicy: 'cache-and-network',
+  });
+  return {
+    loading, error, data,
+  };
+};
+```
+
+Ahora usaríamos esta petición en el contenedor ListOfFavs
+
+```js
+// src/containers/ListOfFavs.js
+
+import React from 'react';
+import { useGetFavsQuery } from '../hooks/useGetFavsQuery';
+import { ListOfFavsComponent } from '../components/ListOfFavs';
+
+export const ListOfFavs = () => {
+  const { loading, error, data } = useGetFavsQuery();
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error!</p>;
+  const { favs } = data;
+  return (
+    <ListOfFavsComponent favs={favs} />
+  );
+};
+```
+
+Y esto lo importaríamos en la página de favoritos:
+
+```js
+// src/pages/Favs.js
+
+import React from 'react';
+import { ListOfFavs } from '../containers/ListOfFavs';
+import { HeadingH1 } from '../components/HeadingH1';
+
+export const Favs = () => (
+  <>
+    <HeadingH1>Favs</HeadingH1>
+    <ListOfFavs />
+  </>
+);
+```
+
+## Logout
+
+Ya sólo nos queda añadir el logout de la página, para lo cual, vamos a añadir un nuevo método en el ```Provider``` del ```Context```:
+
+```js
+// src/Context.js
+
+import React, { createContext, useState } from 'react';
+
+export const Context = createContext();
+
+const Provider = ({ children }) => {
+  const [isAuth, setIsAuth] = useState(() => window.sessionStorage.getItem('token'));
+
+  const value = {
+    isAuth,
+    activateAuth: (token) => {
+      setIsAuth(true);
+      window.sessionStorage.setItem('token', token);
+    },
+    // Añadimos este método para poder hacer logout desde cualquier lado de la aplicación
+    removeAuth: () => {
+      setIsAuth(false);
+      window.sessionStorage.removeItem('token');
+    },
+  };
+
+  return (
+    <Context.Provider value={value}>
+      {children}
+    </Context.Provider>
+  );
+};
+
+export default {
+  Provider,
+  Consumer: Context.Consumer,
+};
+
+```
+
+Y lo usamos por ejemplo en la página de ```User```:
+
+```js
+// src/pages/User.js
+
+import React, { useContext } from 'react';
+import { Context } from '../Context';
+import { HeadingH1 } from '../components/HeadingH1';
+import { SubmitButton } from '../components/SubmitButton';
+
+export const User = () => {
+  const { removeAuth } = useContext(Context);
+  return (
+    <>
+      <HeadingH1>User</HeadingH1>
+      <SubmitButton onClick={removeAuth}>Cerrar Sesión</SubmitButton>
+    </>
+  );
+};
+
+```
