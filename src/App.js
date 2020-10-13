@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
-import { Router } from '@reach/router';
+import { Redirect, Router } from '@reach/router';
 import { GlobalStyle } from './styles/GlobalStyles';
+import { NotFound } from './pages/NotFound';
 import { Home } from './pages/Home';
 import { Detail } from './pages/Detail';
 import { Favs } from './pages/Favs';
@@ -17,26 +18,17 @@ const App = () => {
       <GlobalStyle />
       <Logo />
       <Router>
+        <NotFound default />
         <Home path="/" />
         <Home path="/pet/:categoryId" />
         <Detail path="/detail/:detailId" />
+        {!isAuth && <NotRegisteredUser path="/login" />}
+        {!isAuth && <Redirect from="/favs" to="/login" noThrow />}
+        {!isAuth && <Redirect from="/user" to="/login" noThrow />}
+        {isAuth && <Redirect from="/login" to="/" noThrow />}
+        <Favs path="/favs" />
+        <User path="/user" />
       </Router>
-      {
-        isAuth
-          ? (
-            <Router>
-              <Favs path="/favs" />
-              <User path="/user" />
-            </Router>
-          )
-          : (
-            <Router>
-              <NotRegisteredUser path="/favs" />
-              <NotRegisteredUser path="/user" />
-            </Router>
-          )
-      }
-
       <NavBar />
 
     </div>
