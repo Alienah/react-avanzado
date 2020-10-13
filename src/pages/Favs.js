@@ -1,9 +1,9 @@
 import React from 'react';
-import { FavsWithQuery } from '../containers/FavsWithQuery';
+import { ListOfFavs } from '../containers/ListOfFavs';
 
 export const Favs = () => (
   <>
     <h1>Favs</h1>
-    <FavsWithQuery />
+    <ListOfFavs />
   </>
 );

@@ -3,7 +3,7 @@ import { Grid, Image, Link } from './styles';
 
 // TODO: Add name in db for using it as alt in img
 
-export const ListOfFavs = ({ favs = [] }) => (
+export const ListOfFavsComponent = ({ favs = [] }) => (
   <Grid>
     {
         favs.map((fav) => (
