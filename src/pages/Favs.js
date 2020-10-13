@@ -1,10 +1,9 @@
 import React from 'react';
+import { Layout } from '../components/Layout';
 import { ListOfFavs } from '../containers/ListOfFavs';
-import { HeadingH1 } from '../components/HeadingH1';
 
 export const Favs = () => (
-  <>
-    <HeadingH1>Favs</HeadingH1>
+  <Layout title="Tus favoritos" subtitle="Aquí puedes encontrar tus favoritos">
     <ListOfFavs />
-  </>
+  </Layout>
 );
