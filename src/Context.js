@@ -6,14 +6,15 @@ export const Context = createContext();
 // y le añadimos un estado para saber si está autentificado o no
 // Y esto, como se puede apreciar lo hacemos con la ténica de render props
 const Provider = ({ children }) => {
-  const [isAuth, setIsAuth] = useState(false);
+  const [isAuth, setIsAuth] = useState(() => window.sessionStorage.getItem('token'));
 
   // Esto es lo que vamos a pasarle como prop al Provider.
   // Con lo cual, es el que vamos a poder acceder desde toda la aplicación
   const value = {
     isAuth,
-    activateAuth: () => {
+    activateAuth: (token) => {
       setIsAuth(true);
+      window.sessionStorage.setItem('token', token);
     },
   };
 

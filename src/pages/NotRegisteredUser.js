@@ -19,7 +19,10 @@ export const NotRegisteredUser = () => {
     const input = { email, password };
     const variables = { input };
     register({ variables })
-      .then((activateAuth))
+      .then(({ data }) => {
+        const { signup: signupResponse } = data;
+        activateAuth(signupResponse);
+      })
       /* eslint-disable-next-line no-console */
       .catch((e) => console.warn('Error trying to register the user: ', e));
   };
@@ -28,9 +31,12 @@ export const NotRegisteredUser = () => {
     const input = { email, password };
     const variables = { input };
     login({ variables })
-      .then((activateAuth))
+      .then(({ data }) => {
+        const { login: loginResponse } = data;
+        activateAuth(loginResponse);
+      })
       /* eslint-disable-next-line no-console */
-      .catch((e) => console.warn('Error trying to register the user: ', e));
+      .catch((e) => console.warn('Error trying to login: ', e));
   };
 
   return (
