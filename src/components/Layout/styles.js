@@ -15,5 +15,5 @@ export const Subtitle = styled.h2`
   font-size: 16px;
   font-weight: 400;
   color: #333;
-  padding-bottom: 4px;
+  padding-bottom: 8px;
 `;
