@@ -1,6 +1,6 @@
 import React, { createContext, useState } from 'react';
 
-const Context = createContext();
+export const Context = createContext();
 
 // Vamos a modificar el componente Provider
 // y le añadimos un estado para saber si está autentificado o no
