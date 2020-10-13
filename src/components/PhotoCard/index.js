@@ -7,6 +7,8 @@ import {
   Article, ImgWrapper, Img,
 } from './styles';
 
+// TODO: Add name in db for using it as alt in img
+
 const DEFAULT_IMAGE = 'https://res.cloudinary.com/midudev/image/upload/w_150/v1555671700/category_dogs.jpg';
 
 export const PhotoCard = ({
