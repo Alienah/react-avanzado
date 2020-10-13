@@ -1,4 +1,4 @@
 import React from 'react';
-import { PhotoCardWithQuery } from '../containers/PhotoCardWithQuery';
+import { PhotoCard } from '../containers/PhotoCard';
 
-export const Detail = ({ detailId }) => <PhotoCardWithQuery id={detailId} />;
+export const Detail = ({ detailId }) => <PhotoCard id={detailId} />;

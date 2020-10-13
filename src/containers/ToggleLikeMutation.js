@@ -1,3 +1,5 @@
+// Solution with render props instead useToggleLikeMutation
+
 import React from 'react';
 import { gql } from 'apollo-boost';
 import { Mutation } from 'react-apollo';

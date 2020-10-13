@@ -11,7 +11,7 @@ import {
 
 const DEFAULT_IMAGE = 'https://res.cloudinary.com/midudev/image/upload/w_150/v1555671700/category_dogs.jpg';
 
-export const PhotoCard = ({
+export const PhotoCardComponent = ({
   id, liked, likes = 0, src = DEFAULT_IMAGE,
 }) => {
   const [show, element] = useNearScreen();
