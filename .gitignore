@@ -1,6 +1,12 @@
+# Folders
 dist/
+cypress/integration/examples/
+
+# Modules
 node_modules/
+
+# Config files
 ./package-lock.json
 .editorconfig
-
 .vercel
+
