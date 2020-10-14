@@ -72,3 +72,74 @@ export const Home = React.memo(
 );
 
 ```
+
+## Lazy load y Suspense
+
+Vamos a querer también que sólo nos cargue determinado contenido cólo cuando lo necesitemos y no al iniciar la página. para ello, vamos a usar lazy components.
+
+```React.lazy``` lo que necesita para funcionar es una fucnión que devuelve un import dinámico. Vamos a ver un ejemplo importando de forma dinámica la página de favoritos.
+
+Sin embargo, para que no tengamos errores a la hora de renderizar cuando queremos cargar ese componente lazy, tenemos que usar suspense, que es una utilidad de React que nos va a permitir renderizar algo mientras otro componente está en modo suspensión.
+
+```js
+// App.js
+
+import React, { useContext, Suspense } from 'react';
+import { Redirect, Router } from '@reach/router';
+import { GlobalStyle } from './styles/GlobalStyles';
+import { NotFound } from './pages/NotFound';
+import { Home } from './pages/Home';
+import { Detail } from './pages/Detail';
+// import { Favs } from './pages/Favs';
+import { User } from './pages/User';
+import { NotRegisteredUser } from './pages/NotRegisteredUser';
+import { Logo } from './components/Logo';
+import { NavBar } from './components/NavBar';
+import { Context } from './Context';
+
+// Aquí hacemos el import dinámico con lazy
+// Pero previamente hemos tenido que cambiar la página de Favs para que tenga un export default
+const Favs = React.lazy(() => import('./pages/Favs'));
+
+const App = () => {
+  const { isAuth } = useContext(Context);
+  return (
+    // Envolvemos la aplicación con Suspense
+    <Suspense fallback={<div />}>
+      <GlobalStyle />
+      <Logo />
+      <Router>
+        <NotFound default />
+        <Home path="/" />
+        <Home path="/pet/:categoryId" />
+        <Detail path="/detail/:detailId" />
+        {!isAuth && <NotRegisteredUser path="/login" />}
+        {!isAuth && <Redirect from="/favs" to="/login" noThrow />}
+        {!isAuth && <Redirect from="/user" to="/login" noThrow />}
+        {isAuth && <Redirect from="/login" to="/" noThrow />}
+        <Favs path="/favs" />
+        <User path="/user" />
+      </Router>
+      <NavBar />
+
+    </Suspense>
+  );
+};
+
+export default App;
+
+```
+
+```js
+// src/pages/Favs.js
+
+import React from 'react';
+import { Layout } from '../components/Layout';
+import { ListOfFavs } from '../containers/ListOfFavs';
+
+export default () => (
+  <Layout title="Tus favoritos" subtitle="Aquí puedes encontrar tus favoritos">
+    <ListOfFavs />
+  </Layout>
+);
+```
