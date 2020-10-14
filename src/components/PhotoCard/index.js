@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from '@reach/router';
+import PropTypes from 'prop-types';
 import { useNearScreen } from '../../hooks/useNearScreen';
 import { useToggleLikeMutation } from '../../hooks/useToggleLikeMutation';
 import { FavButton } from '../FavButton';
@@ -41,4 +42,26 @@ export const PhotoCardComponent = ({
       }
     </Article>
   );
+};
+
+// Ejemplo de custom prop
+PhotoCardComponent.propTypes = {
+  id: PropTypes.string.isRequired,
+  liked: PropTypes.bool.isRequired,
+  src: PropTypes.string.isRequired,
+  likes: (props, propName) => {
+    /* eslint-disable-next-line react/destructuring-assignment */
+    const propValue = props[propName];
+    if (propValue === undefined) {
+      return new Error(`${propValue} value must be defined`);
+    }
+    if (propValue < 0) {
+      return new Error(`${propValue} value must be greater than 0`);
+    }
+    return null;
+  },
+};
+
+PhotoCardComponent.defaultProps = {
+  likes: 0,
 };
