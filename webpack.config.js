@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const WebpackPwaManifestPlugin = require('webpack-pwa-manifest');
+const WorboxWebpackPlugin = require('workbox-webpack-plugin');
 const path = require('path');
 
 module.exports = {
@@ -28,6 +29,32 @@ module.exports = {
           purpose: 'any maskable',
         },
       ],
+    }),
+    // Esta es la utilidad de Webbox que nos va a generar un service worker
+    new WorboxWebpackPlugin.GenerateSW({
+      // Le damos las instrucciones de lo que tiene que cachear
+      runtimeCaching: [
+        {
+          // Por ejemplo aquí le estamos indicando la url desde la que estamos cargando las imágenes
+          // que puede ser cloudinary o unsplash.com
+          urlPattern: new RegExp('https://(res.cloudinary.com|images.unsplash.com)'),
+          // También le podemos decir la estrategia que debe seguir
+          // Por ejemplo cacheFirst para mirar si está en la caché antes de en la red
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'images',
+          },
+        },
+        {
+          urlPattern: new RegExp('https://petgram-api-server.vercel.app/'),
+          // En este caso queremos que los datos los traiga frescos
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'api',
+          },
+        },
+      ],
+      maximumFileSizeToCacheInBytes: 5000000,
     }),
   ],
   //  Le añadimos una nueva configuración
