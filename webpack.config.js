@@ -1,4 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const WebpackPwaManifestPlugin = require('webpack-pwa-manifest');
+const path = require('path');
 
 module.exports = {
   // En el objeto le decimos que el output va a estar en un archivo app.bundle.js
@@ -10,6 +12,22 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: 'src/index.html',
+    }),
+    new WebpackPwaManifestPlugin({
+      name: 'Petgram - Tu app de fotos de mascotas',
+      shortname: 'Petgram 🐶',
+      description: 'Con Petgram puedes encontrar fotos de tus animales domésticos muy fácilmente',
+      background_color: '#fff',
+      theme_color: '#b1a',
+      icons: [
+        {
+          src: path.resolve('src/assets/icon.png'),
+          // Los diferentes tamaños que normalmente utilizan
+          // los dispositivos móviles para mostrar la pwa
+          sizes: [96, 128, 192, 256, 384, 512],
+          purpose: 'any maskable',
+        },
+      ],
     }),
   ],
   //  Le añadimos una nueva configuración
